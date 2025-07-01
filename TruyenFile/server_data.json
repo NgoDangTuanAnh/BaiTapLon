@@ -1,0 +1,122 @@
+{
+    "files": [
+        {
+            "id": "1751312375511233",
+            "name": "data.txt.txt",
+            "size": 3,
+            "filePath": "files\\1751312375511233_data.txt.txt",
+            "type": "text/plain",
+            "course": "CT101",
+            "docType": "lecture",
+            "description": "",
+            "uploadDate": "01-07-2025 02:39:35",
+            "uploader": "Giảng viên A",
+            "isEncrypted": true,
+            "isSigned": false,
+            "signature": null,
+            "lecturerPublicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzZIR4qDVlZih/kd5GkmH\nDIe+SGziunLSVM6kmJQaeacDKW2uj9JBNEE+zs9D8zCBnB7JJeop+eqWrXFv868C\nh6yscAOD0k2PxOCtflpUOrPdnLfNGtOik5wAA39CDiU2geajPU1AoGGxAkKq4Bkn\nDIhuVPhDSsKdh3BiVqtY+k8fKSMi9oLaz8LRTmS+AxCW4TduMdpCW6tBFVIMoQp+\nnZq7or3wUCaRNt0smhwC/TmgtYdsW7qity/I3GPYSp1CE9qgmCrW2IVL4WqNDJTe\np4uA3OWv1zbEmHlH2NbtFOjmGIKJk30mmhLGrNy3AJc4uUWuuUQ+/5GDmgSrECX3\nxwIDAQAB\n-----END PUBLIC KEY-----",
+            "aesKeyBase64": "lFohjs53RFpFD9VpmwqUhqGNWltX7rHH5oIfXvVuZUc="
+        },
+        {
+            "id": "1751313473037063",
+            "name": "Data.txt",
+            "size": 5,
+            "filePath": "files\\1751313473037063_Data.txt",
+            "type": "text/plain",
+            "course": "CT101",
+            "docType": "lecture",
+            "description": "",
+            "uploadDate": "01-07-2025 02:57:53",
+            "uploader": "Giảng viên A",
+            "isEncrypted": true,
+            "isSigned": true,
+            "signature": "fa3rkKujDucCu2tQfSC2Ygww6Cl3tL0nhO8tgZ7fXJaW1x8275Cf7qwgXSo0ef/i7PxgFeEAemZSc3ILBd73aPLD57OYIky+uEcoubQeFGh5k4zJxLNuOQUXXhlvOTTt8g1y5B9NE1Hi7NlorEXZMaMFtrMZ8YYbz8uOLZUsMXsppk10GHY8yFR8+AIwnqirg4cuu40CQdrXuHDa56n7qhcBMpEuqDUByOCeLuVabmqaJdzPkFPg2QCaHdk53EU7dji5Lvg5Q/4Tx3cfC3g9Knsl86ZL4o4AroYtpEkTT+ZbOASSXXHuRg1bS0Ic/6ibkW3SJtgw5rafz8m4TiH3NA==",
+            "lecturerPublicKey": "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCNq/CPOVBtD6O9bUyrp\r\nssavnst1IcqxlgC37ZoKhCnMJ1yrjHGJAPYlx7WnZ8O3F7TLMl4mrqgN3ofed64B\r\nWOdtjAavFm6wY+u0hlrg4K56o18WbiPnsAU6wVokP0ZiuhnRpEziMC2vOkhEk+nr\r\nygru0bSnpmAeTcXz6QWO+duWfGQWSNtQGTG8Wwd8XlvnK5sA1rfnS5Ynvw9oE3N+\r\nVqc9T4NjocO9A5RGyK4EWrbtM8KeqtWVAqaxlO0BF54AKSZFym2UuqgMsMwGweyz\r\nwsUkkULYpVHGt5l8htntLwuJjpKoLdixJ9yugewya4e/2713Kz9jzGH5LN7bTP0v\r\n4QIDAQAB\r\n-----END PUBLIC KEY-----\r\n",
+            "aesKeyBase64": "6oVSY46EqrELTjA0Q/xyas8VM3151GzfPtpUIu4VuWM="
+        },
+        {
+            "id": "1751313875601383",
+            "name": "BaiGiang.txt",
+            "size": 0,
+            "filePath": "files\\1751313875601383_BaiGiang.txt",
+            "type": "text/plain",
+            "course": "CT101",
+            "docType": "lecture",
+            "description": "",
+            "uploadDate": "01-07-2025 03:04:35",
+            "uploader": "Giảng viên A",
+            "isEncrypted": true,
+            "isSigned": true,
+            "signature": "kvJI2queNySYbPGNE3YxzByqkmMLq/pzj/ri2bYUOhOddegvijskqBvdFbe0auF/2dR1+GpEttiaxZUM+H3HSpmD3f1hjmkql9t9XCSM5aJsTf/piqXUzH9xtYZuOGpGTg2NCzcuHNqRpQbHa5QJkO4q41NzMxNfww0ntTJ7xshG8flTh/ggvpOKkXSF01gVuSxZM/cLYZDcGC6/lt6tSecfqDq6fuiBgVHxkVvK58rl8/9SeKrAxpRCuQ/lRghyrDP+xcyYsz6H1vJZzy66y3hYcoFXn70/Bz9GMU9rtUhTXsIPCvhrhmWxDxR3lv92FspbCGRbZjwUkQyyM+dVuA==",
+            "lecturerPublicKey": "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCNq/CPOVBtD6O9bUyrp\r\nssavnst1IcqxlgC37ZoKhCnMJ1yrjHGJAPYlx7WnZ8O3F7TLMl4mrqgN3ofed64B\r\nWOdtjAavFm6wY+u0hlrg4K56o18WbiPnsAU6wVokP0ZiuhnRpEziMC2vOkhEk+nr\r\nygru0bSnpmAeTcXz6QWO+duWfGQWSNtQGTG8Wwd8XlvnK5sA1rfnS5Ynvw9oE3N+\r\nVqc9T4NjocO9A5RGyK4EWrbtM8KeqtWVAqaxlO0BF54AKSZFym2UuqgMsMwGweyz\r\nwsUkkULYpVHGt5l8htntLwuJjpKoLdixJ9yugewya4e/2713Kz9jzGH5LN7bTP0v\r\n4QIDAQAB\r\n-----END PUBLIC KEY-----\r\n",
+            "aesKeyBase64": "uXpq1S8rsjH+LK7r0HMU9fsXLJs7eBIyj4a91gvOmFg="
+        },
+        {
+            "id": "1751315421872555",
+            "name": "BaiGiang.txt",
+            "size": 7,
+            "filePath": "files\\1751315421872555_BaiGiang.txt",
+            "type": "text/plain",
+            "course": "CT101",
+            "docType": "lecture",
+            "description": "",
+            "uploadDate": "01-07-2025 03:30:21",
+            "uploader": "Giảng viên A",
+            "isEncrypted": true,
+            "isSigned": true,
+            "signature": "VgGgeXrnxCDpZ6QfjWnnHLhKiChJeE8khGUfCE9qdF4EFUX9DiqcNGp8KRzDdu9oyDaP63TMUrrflsSiU7TYE0yCyg0rnnBzN396VroZlVo9e80yf5umSJClaPxXVFvZ0nzS8fQL32SNw+XmqoNA5OWe+IdMKySbwXuh1+AYn9BStUAqp6Ck1LwystGzMKHz6DcCf8P/+8lolPrS926hQ8QbwnGd1hqAYOtXmusXIsNcZyKRqCoYGBjidy8UuYlySjSzJ+u6z3VB94SlMCJwLrVbuwNmDOu3Sq9ootifmyO6vIkBjaPk6WNYnMenRqNXt4yifX8BVG3zCGoL6JybDQ==",
+            "lecturerPublicKey": "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCNq/CPOVBtD6O9bUyrp\r\nssavnst1IcqxlgC37ZoKhCnMJ1yrjHGJAPYlx7WnZ8O3F7TLMl4mrqgN3ofed64B\r\nWOdtjAavFm6wY+u0hlrg4K56o18WbiPnsAU6wVokP0ZiuhnRpEziMC2vOkhEk+nr\r\nygru0bSnpmAeTcXz6QWO+duWfGQWSNtQGTG8Wwd8XlvnK5sA1rfnS5Ynvw9oE3N+\r\nVqc9T4NjocO9A5RGyK4EWrbtM8KeqtWVAqaxlO0BF54AKSZFym2UuqgMsMwGweyz\r\nwsUkkULYpVHGt5l8htntLwuJjpKoLdixJ9yugewya4e/2713Kz9jzGH5LN7bTP0v\r\n4QIDAQAB\r\n-----END PUBLIC KEY-----\r\n",
+            "aesKeyBase64": "OpmspISscvuh81GmCXkwwiNAXlgXKf+lW8RYHfKK7vs="
+        }
+    ],
+    "lecturer_keys": {
+        "public": "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCNq/CPOVBtD6O9bUyrp\r\nssavnst1IcqxlgC37ZoKhCnMJ1yrjHGJAPYlx7WnZ8O3F7TLMl4mrqgN3ofed64B\r\nWOdtjAavFm6wY+u0hlrg4K56o18WbiPnsAU6wVokP0ZiuhnRpEziMC2vOkhEk+nr\r\nygru0bSnpmAeTcXz6QWO+duWfGQWSNtQGTG8Wwd8XlvnK5sA1rfnS5Ynvw9oE3N+\r\nVqc9T4NjocO9A5RGyK4EWrbtM8KeqtWVAqaxlO0BF54AKSZFym2UuqgMsMwGweyz\r\nwsUkkULYpVHGt5l8htntLwuJjpKoLdixJ9yugewya4e/2713Kz9jzGH5LN7bTP0v\r\n4QIDAQAB\r\n-----END PUBLIC KEY-----\r\n",
+        "private": "-----BEGIN PRIVATE KEY-----\r\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC0I2r8I85UG0Po\r\n71tTKumyxq+ey3UhyrGWALftmgqEKcwnXKuMcYkA9iXHtadnw7cXtMsyXiauqA3e\r\nh953rgFY522MBq8WbrBj67SGWuDgrnqjXxZuI+ewBTrBWiQ/RmK6GdGkTOIwLa86\r\nSEST6evKCu7RtKemYB5NxfPpBY7525Z8ZBZI21AZMbxbB3xeW+crmwDWt+dLlie/\r\nD2gTc35Wpz1Pg2Ohw70DlEbIrgRatu0zwp6q1ZUCprGU7QEXngApJkXKbZS6qAyw\r\nzAbB7LPCxSSRQtilUca3mXyG2e0vC4mOkqgt2LEn3K6B7DJrh7/bvXcrP2PMYfks\r\n3ttM/S/hAgMBAAECggEAVn9PRuU2lOJGuJn+gy/u6Z5IA/r0MpausTWFG/1EoXOk\r\niR4Rba2yuJh5Sa0rRkMPLr3seDIHZwRhLIKXS2ZtVTBDROKMvjvGTSSIGZ+Xrat6\r\nTepBzf9FqBrKvL84+n0kuPHe3YLhdXrqUhUTgObpBqo7RMz3V4d95aBw32qA3e5I\r\n817lGyFl+hOBcacav3gpVn0lO++ElnmIdnj/0moME1vrIue8jXHJg/MSYR308qWU\r\nfT76I8W7Y/u01QFvwb3+JZ7G+0Q51W2O2afqNrWp9o3fzcJUkkKAMGoKkbmNSYZi\r\nXlmkAjEYf4V1ffaXY7XQCs3rTG9YvVOazXqua+I/BQKBgQDrrXv8t9UMMJoAhqCU\r\nqHlIEKshzPqS1oej5iYM+MFiZdqCSD0K0tvrqU53lFerK1vlEz+30v7NidunEOV7\r\nC7N9yLSutWrHAdtTmFveoCOYdXiGnU+vfSnrSqQTTcbScFld7/xHWho8tsZq5cVa\r\njK2eg5CmOss43+SFHh94a+qiywKBgQDDq+tXg6V9lO/KbkNBG/8SNcU4xC3lzAsM\r\nztYv/EezEbSwChtXdNLzrSGEOxhA45T+EMAESzf1XRe7K10rtL5YZ0DZOjG93p23\r\nf8+0CmPtIlTjKxy0FuzZs6Iwsd6/YVVXx0Mlb1dQV36gtiRwyA5iIGCinaJjptf2\r\nUpCo4E1mgwKBgGVo+Pj9gUcFgr7HL0HIXKeNxJV+xjN47FSyK51ZTJ0yhpuYyetm\r\nYAs/huwdgLu+pIQljD1lJQ78Su/QbW5M0qdFPboPhiqrudx2qtFYxvhLU9lYx3kT\r\nun3sWD2WMf9LKKkrIrrxImkNnMNSq2ETN4IFyrA8jEWk0YgWNiRzCzuRAoGAfSZv\r\nnwjPh1QETuhZUcKTUVVc8GLhrFHmW2nLquNkBI91jwbX2AcbicmZX1bgu1gUiq+x\r\n8M0fXGsPa6JftD2lZSudWZMUD4ncPGqeMVxX72r++lEvyavED7YKLbUGcEfT6xHC\r\ny6W8JeHgVvBIvG3obTCiPkAuhihHhv/mEG1uc/sCgYEA4A/8xzY/MBs9eeeV+CCd\r\nsXHXqEmiLgTgqD1gbvQ9soFVtOohnbHkCAwf5DdFKP7cQbOb5nIQl1iPJCcgid5E\r\n4OPNPhKiSW84Az1JBodAbdPKCwaywkGhIv2M72p8UG1atoqT29djtEfFymfQGf3k\r\nQ0uMQBGHb8aI73CvFd2NEA0=\r\n-----END PRIVATE KEY-----\r\n"
+    },
+    "classes": [
+        {
+            "id": "CT101",
+            "name": "Lập trình cơ bản"
+        },
+        {
+            "id": "CT201",
+            "name": "Cấu trúc dữ liệu"
+        },
+        {
+            "id": "CT202",
+            "name": "Giải thuật"
+        },
+        {
+            "id": "CT301",
+            "name": "Cơ sở dữ liệu"
+        },
+        {
+            "id": "CT401",
+            "name": "Mạng máy tính"
+        },
+        {
+            "id": "CT501",
+            "name": "Trí tuệ nhân tạo"
+        },
+        {
+            "id": "TH101",
+            "name": "Toán cao cấp"
+        },
+        {
+            "id": "TH201",
+            "name": "Xác suất thống kê"
+        }
+    ],
+    "users": {
+        "lecturers": {
+            "giangvienA": {
+                "password": "password"
+            }
+        },
+        "students": {
+            "sinhvienA": {
+                "password": "password"
+            }
+        }
+    }
+}

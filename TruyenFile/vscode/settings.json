@@ -1,0 +1,38 @@
+{
+    // Cài đặt cho Python extension
+    "python.pythonPath": "${workspaceFolder}/venv/Scripts/python", // Windows
+    // "python.pythonPath": "${workspaceFolder}/venv/bin/python", // macOS/Linux
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "120"
+    ],
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.python", // Đảm bảo sử dụng Python formatter mặc định
+
+    // Cài đặt cho HTML/JavaScript
+    "editor.tabSize": 4, // Đảm bảo tab size nhất quán
+    "files.associations": {
+        "*.html": "html"
+    },
+    "emmet.includeLanguages": {
+        "javascript": "html" // Cho phép Emmet trong JS khi dùng template literals
+    },
+
+    // Loại trừ một số thư mục khỏi tìm kiếm và cây thư mục
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/venv": true // Ẩn thư mục môi trường ảo
+    },
+    "search.exclude": {
+        "**/venv": true,
+        "**/node_modules": true // Nếu có dự án Node.js sau này
+    }
+}

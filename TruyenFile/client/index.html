@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Chuyển Tệp Giáo Dục An Toàn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- For RSA (public/private key encryption/signing, often for small data like symmetric keys or hashes) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+    <!-- For AES encryption/decryption (symmetric encryption for file content) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+        .file-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .drag-active {
+            border-color: #4f46e5;
+            background-color: #f0f7ff;
+        }
+        #fileInfo {
+            transition: all 0.3s ease;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar-link {
+            display: flex; /* Ensure flex for consistent icon alignment */
+            align-items: center; /* Align items vertically */
+            padding: 12px 16px; /* py-3 px-4 */
+            border-radius: 8px; /* rounded-lg */
+            margin-bottom: 8px; /* mb-2 */
+            text-decoration: none; /* Remove underline */
+            color: #4b5563; /* text-gray-600 */
+            transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+        }
+        .sidebar-link:hover {
+            background-color: rgba(79, 70, 229, 0.1); /* hover:bg-indigo-50 */
+            color: #4f46e5; /* hover:text-indigo-600 */
+        }
+        .sidebar-link.active {
+            background-color: #eef2ff; /* bg-indigo-50 */
+            color: #4f46e5; /* text-indigo-600 */
+            font-weight: 500; /* font-medium */
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            max-width: 28rem;
+            width: 100%;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-graduation-cap text-3xl"></i>
+                <h1 class="text-2xl font-bold">Truyền File University</h1>
+            </div>
+            <div class="flex items-center space-x-6">
+                <button id="teacherBtn" class="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition">Giảng viên</button>
+                <button id="studentBtn" class="px-4 py-2 text-white border border-white rounded-lg font-medium hover:bg-white hover:text-indigo-600 transition">Sinh viên</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Teacher Interface -->
+        <div id="teacherInterface" class="tab-content active">
+            <div class="flex flex-col md:flex-row">
+                <!-- Sidebar -->
+                <div class="sidebar w-full md:w-64 bg-white rounded-lg shadow-md p-4 mb-6 md:mb-0 md:mr-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-chalkboard-teacher mr-2"></i> Giảng viên
+                    </h2>
+                    <nav>
+                        <a href="#" id="teacherUploadLink" class="sidebar-link active">
+                            <i class="fas fa-file-upload mr-3"></i> Tải tệp lên
+                        </a>
+                        <a href="#" id="teacherHistoryLink" class="sidebar-link">
+                            <i class="fas fa-history mr-3"></i> Lịch sử gửi
+                        </a>
+                        <a href="#" id="teacherClassesLink" class="sidebar-link">
+                            <i class="fas fa-users mr-3"></i> Lớp môn học
+                        </a>
+                        <a href="#" id="teacherKeyManagementLink" class="sidebar-link">
+                            <i class="fas fa-key mr-3"></i> Quản lý khóa
+                        </a>
+                        <a href="#" id="teacherSettingsLink" class="sidebar-link">
+                            <i class="fas fa-cog mr-3"></i> Cài đặt
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Main Content for Teacher -->
+                <div class="flex-1">
+                    <!-- Upload File Section (Teacher) -->
+                    <div id="teacherUploadSection" class="teacher-tab-content active bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Tải tệp lên hệ thống</h2>
+                        
+                        <!-- File Drop Zone -->
+                        <div id="dropZone" 
+                             class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6 hover:border-indigo-400 transition cursor-pointer"
+                             ondragover="dragOver(event)" 
+                             ondragleave="dragLeave(event)" 
+                             ondrop="dropHandler(event)">
+                            <i class="fas fa-cloud-upload-alt text-5xl text-indigo-500 mb-4"></i>
+                            <p class="text-gray-600 mb-4">Kéo thả tệp vào đây hoặc click để tải tệp</p>
+                            <input type="file" id="fileUpload" class="hidden" onchange="handleFileSelect(this.files)">
+                            <button id="selectFileBtn" 
+                                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                                    onclick="document.getElementById('fileUpload').click()">
+                                <i class="fas fa-file-upload mr-2"></i> Tải tệp lên
+                            </button>
+                        </div>
+
+                        <!-- File Info Display -->
+                        <div id="fileInfo" class="hidden bg-gray-50 rounded-lg p-4 mb-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center">
+                                    <i id="fileIcon" class="fas fa-file text-xl mr-3 text-indigo-600"></i>
+                                    <div>
+                                        <h3 id="fileName" class="font-medium text-gray-800"></h3>
+                                        <p id="fileSize" class="text-sm text-gray-500"></p>
+                                    </div>
+                                </div>
+                                <button onclick="clearFile()" class="text-red-500 hover:text-red-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div id="uploadProgress" class="progress-bar bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Class and File Type Selection -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2" for="classSelect">Lớp môn học</label>
+                                <select id="classSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <!-- Options loaded dynamically by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2" for="docType">Loại tài liệu</label>
+                                <select id="docType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="lecture">Bài giảng</option>
+                                    <option value="exam">Đề thi</option>
+                                    <option value="reference">Tài liệu tham khảo</option>
+                                    <option value="exercise">Bài tập</option>
+                                    <option value="solution">Bài giải</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- File Description -->
+                        <div class="mb-6">
+                            <label class="block text-gray-700 font-medium mb-2" for="fileDescription">Mô tả tài liệu</label>
+                            <textarea id="fileDescription" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" rows="3" placeholder="Nhập mô tả chi tiết về tài liệu này..."></textarea>
+                        </div>
+
+                        <!-- Security Options -->
+                        <div class="mb-6">
+                            <label class="block text-gray-700 font-medium mb-2">Tùy chọn bảo mật</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <input type="checkbox" id="encryptCheck" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
+                                        <label for="encryptCheck" class="ml-2 font-medium text-gray-700">Mã hóa tài liệu</label>
+                                    </div>
+                                    <p class="text-sm text-gray-500">Sử dụng AES-256 để mã hóa nội dung tệp</p>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <input type="checkbox" id="signCheck" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
+                                        <label for="signCheck" class="ml-2 font-medium text-gray-700">Ký số tài liệu</label>
+                                    </div>
+                                    <p class="text-sm text-gray-500">Sử dụng RSA/SHA-256 để xác thực nguồn gốc</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Button -->
+                        <button id="uploadBtn" 
+                                class="w-full px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled>
+                            <i class="fas fa-lock mr-2"></i> Tải lên bảo mật
+                        </button>
+                    </div>
+
+                    <!-- Recent Files Section (Teacher) -->
+                    <div id="teacherHistorySection" class="teacher-tab-content mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-history mr-2"></i> Lịch sử tệp đã gửi
+                        </h3>
+                        <div id="recentFilesContainerTeacher" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Files will be dynamically loaded here by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Teacher Class Management Section -->
+                    <div id="teacherClassesSection" class="teacher-tab-content mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-users mr-2"></i> Quản lý lớp học
+                        </h3>
+                        <p class="text-gray-600 mb-4">Tại đây bạn có thể quản lý các lớp học và sinh viên.</p>
+                        <div class="border-t pt-4">
+                            <h4 class="font-medium text-gray-700 mb-3">Thêm lớp học mới</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" id="newClassId" placeholder="Mã lớp (VD: CT501)" class="px-4 py-2 border border-gray-300 rounded-lg">
+                                <input type="text" id="newClassName" placeholder="Tên lớp (VD: Trí tuệ nhân tạo)" class="px-4 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                            <button id="addClassBtn" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Thêm lớp</button>
+                        </div>
+                        <div class="mt-6">
+                            <h4 class="font-medium text-gray-700 mb-3">Danh sách lớp hiện có</h4>
+                            <ul id="currentClassesList" class="list-disc list-inside text-gray-700">
+                                <!-- Classes will be loaded dynamically -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Key Management Section -->
+                    <div id="teacherKeyManagementSection" class="teacher-tab-content mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-key mr-2"></i> Quản lý khóa riêng tư
+                        </h3>
+                        <p class="text-gray-600 mb-4">Khóa riêng tư của bạn dùng để ký số các tài liệu. KHÔNG CHIA SẺ KHÓA NÀY!</p>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2">Khóa công khai (Public Key):</label>
+                            <textarea id="lecturerPubKeyDisplay" rows="5" class="w-full p-2 border rounded bg-gray-100 text-gray-700 font-mono text-sm" readonly></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Chia sẻ khóa này cho sinh viên để họ xác thực chữ ký của bạn.</p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2">Khóa riêng tư (Private Key):</label>
+                            <textarea id="lecturerPrivKeyDisplay" rows="5" class="w-full p-2 border rounded bg-gray-100 text-gray-700 font-mono text-sm" readonly></textarea>
+                            <p class="text-xs text-red-500 mt-1">CẢNH BÁO: KHÔNG BAO GIỜ CHIA SẺ KHÓA NÀY! Khóa này được lưu tạm thời trên trình duyệt của bạn (dành cho demo).</p>
+                        </div>
+                        <button id="generateNewKeysBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                            <i class="fas fa-sync-alt mr-2"></i> Tạo cặp khóa mới
+                        </button>
+                        <p id="keyGenMessage" class="text-sm text-green-600 mt-2 hidden">Đã tạo cặp khóa mới thành công!</p>
+                    </div>
+
+                    <!-- Teacher Settings Section -->
+                    <div id="teacherSettingsSection" class="teacher-tab-content mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-cog mr-2"></i> Cài đặt tài khoản
+                        </h3>
+                        <p class="text-gray-600 mb-4">Quản lý thông tin tài khoản và tùy chọn hệ thống của bạn.</p>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2" for="oldPassword">Mật khẩu cũ</label>
+                            <input type="password" id="oldPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2" for="newPassword">Mật khẩu mới</label>
+                            <input type="password" id="newPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2" for="confirmPassword">Xác nhận mật khẩu mới</label>
+                            <input type="password" id="confirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <button class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                            <i class="fas fa-save mr-2"></i> Lưu cài đặt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Interface -->
+        <div id="studentInterface" class="tab-content">
+            <div class="flex flex-col md:flex-row">
+                <!-- Sidebar -->
+                <div class="sidebar w-full md:w-64 bg-white rounded-lg shadow-md p-4 mb-6 md:mb-0 md:mr-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-user-graduate mr-2"></i> Sinh viên
+                    </h2>
+                    <nav>
+                        <a href="#" id="studentDocLink" class="sidebar-link active">
+                            <i class="fas fa-file-download mr-3"></i> Tài liệu môn học
+                        </a>
+                        <a href="#" id="studentVerifyLink" class="sidebar-link">
+                            <i class="fas fa-check-circle mr-3"></i> Xác thực chữ ký
+                        </a>
+                        <a href="#" id="studentSavedDocsLink" class="sidebar-link">
+                            <i class="fas fa-folder-open mr-3"></i> Tài liệu đã lưu
+                        </a>
+                        <a href="#" id="studentPersonalKeyLink" class="sidebar-link">
+                            <i class="fas fa-key mr-3"></i> Khóa cá nhân
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Main Content for Student -->
+                <div class="flex-1">
+                    <!-- Student Document Section -->
+                    <div id="studentDocSection" class="student-tab-content active bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Tài liệu môn học</h2>
+                        
+                        <!-- Filter Options -->
+                        <div class="flex flex-wrap items-center justify-between mb-6">
+                            <div class="flex space-x-2 mb-4 md:mb-0">
+                                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Tất cả</button>
+                                <button class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Bài giảng</button>
+                                <button class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Đề thi</button>
+                            </div>
+                            <div class="relative">
+                                <input type="text" placeholder="Tìm kiếm tài liệu..." class="px-4 py-2 border border-gray-300 rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <!-- List of Student Documents -->
+                        <div id="studentFilesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Files will be dynamically loaded here by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Student Signature Verification Section -->
+                    <div id="studentVerifySection" class="student-tab-content mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i> Xác thực chữ ký tệp tin
+                        </h3>
+                        <p class="text-gray-600 mb-4">Tải lên một tệp đã được gửi và nhập khóa công khai của giảng viên để xác thực chữ ký của họ.</p>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2" for="verifyFileUpload">Tệp để xác thực</label>
+                            <input type="file" id="verifyFileUpload" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2" for="signatureInput">Chữ ký số (Base64)</label>
+                            <textarea id="signatureInput" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Dán chữ ký số đã được cung cấp (ví dụ: từ thông tin tệp)"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2" for="lecturerPublicKeyInput">Khóa công khai của giảng viên (Base64)</label>
+                            <textarea id="lecturerPublicKeyInput" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Dán khóa công khai của giảng viên đã ký tệp"></textarea>
+                        </div>
+                        <button id="verifySignatureBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                            <i class="fas fa-check-double mr-2"></i> Xác thực chữ ký
+                        </button>
+                        <div id="verificationResult" class="mt-4 p-3 rounded-lg hidden"></div>
+                    </div>
+
+                    <!-- Student Saved Documents Section -->
+                    <div id="studentSavedDocsSection" class="student-tab-content mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-folder-open mr-2"></i> Tài liệu đã lưu (Client-side)
+                        </h3>
+                        <p class="text-gray-600 mb-4">Đây là nơi bạn có thể xem các tệp đã tải xuống và giải mã hoặc xác thực chúng nếu cần.</p>
+                        <div id="savedFilesContainerStudent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <p class="text-gray-500 col-span-full">Tính năng này cần backend để lưu trữ các tệp đã tải xuống của bạn.</p>
+                            <!-- In a real app, this would list files the student has downloaded/saved -->
+                        </div>
+                    </div>
+
+                    <!-- Student Personal Key Management Section -->
+                    <div id="studentPersonalKeySection" class="student-tab-content mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-key mr-2"></i> Khóa cá nhân của sinh viên
+                        </h3>
+                        <p class="text-gray-600 mb-4">Trong hệ thống thực, bạn có thể có khóa riêng để mã hóa tài liệu cá nhân hoặc tạo chữ ký khi nộp bài tập.</p>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2">Khóa công khai của bạn (Public Key):</label>
+                            <textarea id="studentPubKeyDisplay" rows="5" class="w-full p-2 border rounded bg-gray-100 text-gray-700 font-mono text-sm" readonly>Chưa tạo</textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2">Khóa riêng tư của bạn (Private Key):</label>
+                            <textarea id="studentPrivKeyDisplay" rows="5" class="w-full p-2 border rounded bg-gray-100 text-gray-700 font-mono text-sm" readonly>Chưa tạo</textarea>
+                            <p class="text-xs text-red-500 mt-1">CẢNH BÁO: KHÔNG BAO GIỜ CHIA SẺ KHÓA NÀY!</p>
+                        </div>
+                        <button id="generateStudentKeysBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                            <i class="fas fa-plus-circle mr-2"></i> Tạo khóa cá nhân
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Signature Detail Modal -->
+    <div id="signatureModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" onclick="hideSignatureModal()">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Thông tin chữ ký số</h3>
+            <div id="modalSignatureInfo" class="space-y-3 text-gray-700 text-sm">
+                <p><strong class="block text-gray-600">Trạng thái:</strong> <span id="modalSignatureStatus"></span></p>
+                <p><strong class="block text-gray-600">Người ký:</strong> <span id="modalSignerName"></span></p>
+                <p><strong class="block text-gray-600">Ngày ký:</strong> <span id="modalSignDate"></span></p>
+                <p><strong class="block text-gray-600">Thuật toán:</strong> <span id="modalAlgorithm"></span></p>
+                <p><strong class="block text-gray-600">Chữ ký (một phần):</strong> <span id="modalSignatureValue" class="break-all font-mono text-xs bg-gray-100 p-2 rounded block"></span></p>
+                <p class="text-xs text-gray-500 mt-2">Để xác thực hoàn toàn, hãy tải tệp xuống và sử dụng chức năng "Xác thực chữ ký".</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection URL
+        const WS_URL = 'ws://localhost:65432'; 
+        let ws;
+        let currentFile = null;
+        let lecturerPublicKeyOnClient = null; // Store lecturer's public key loaded from server
+        let lecturerPrivateKeyOnClient = null; // Store lecturer's private key (for client-side signing demo only)
+
+        // Keys for the student (stored in localStorage for persistence in demo)
+        let studentKeys = JSON.parse(localStorage.getItem('studentKeys')) || {};
+
+        // --- WebSocket Connection Handling ---
+        function connectWebSocket() {
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                console.log('WebSocket Connected');
+                // Request initial data upon connection
+                requestToServer('get_lecturer_keys');
+                requestToServer('get_files');
+                requestToServer('get_classes');
+            };
+
+            ws.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                console.log('Received from server:', response);
+                
+                if (response.status === 'success') {
+                    if (response.action === 'get_files') {
+                        displayRecentFilesTeacher(response.files);
+                        displayStudentDocuments(response.files);
+                    } else if (response.action === 'get_lecturer_keys') {
+                        lecturerPublicKeyOnClient = response.publicKey;
+                        lecturerPrivateKeyOnClient = response.privateKey; // For client-side signing demo
+                        updateLecturerKeyDisplays();
+                    } else if (response.action === 'generate_lecturer_keys') {
+                        lecturerPublicKeyOnClient = response.publicKey;
+                        lecturerPrivateKeyOnClient = response.privateKey;
+                        updateLecturerKeyDisplays();
+                        keyGenMessage.classList.remove('hidden');
+                        setTimeout(() => keyGenMessage.classList.add('hidden'), 3000);
+                    } else if (response.action === 'download_file') {
+                        handleDownloadedFile(response);
+                    } else if (response.action === 'get_classes') {
+                        populateClassSelect(response.classes);
+                        displayCurrentClasses(response.classes);
+                    } else if (response.action === 'upload_file') {
+                        alert(response.message);
+                        // After successful upload, refresh file lists
+                        requestToServer('get_files'); 
+                    } else if (response.action === 'add_class') {
+                        alert(response.message);
+                        requestToServer('get_classes'); // Refresh classes after adding
+                    }
+                } else {
+                    alert('Server Error: ' + (response.message || 'Unknown error'));
+                    console.error('Server Error:', response.message);
+                }
+            };
+
+            ws.onclose = (event) => {
+                console.log('WebSocket Disconnected:', event.reason);
+                alert('Kết nối đến máy chủ bị mất. Vui lòng thử lại sau.');
+                // Optional: Implement reconnect logic here
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket Error:', error);
+            };
+        }
+
+        // Function to send requests to the server via WebSocket
+        function requestToServer(action, data = {}) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const request = { action: action, data: data };
+                ws.send(JSON.stringify(request));
+            } else {
+                alert('Không thể kết nối đến máy chủ. Vui lòng tải lại trang.');
+                console.error('WebSocket is not open. Attempting to reconnect...');
+                connectWebSocket(); // Attempt to reconnect
+            }
+        }
+
+        // --- Utility Functions for ArrayBuffer and Base64 Conversion ---
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binary_string = atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        // --- Cryptography Functions (using CryptoJS and JSEncrypt) ---
+        function generateRSAKeyPairClient() {
+            const crypt = new JSEncrypt({ default_key_size: 2048 });
+            crypt.getKey();
+            return {
+                publicKey: crypt.getPublicKey(),
+                privateKey: crypt.getPrivateKey()
+            };
+        }
+
+        function generateAESKey() {
+            return CryptoJS.lib.WordArray.random(256/8).toString(CryptoJS.enc.Base64);
+        }
+
+        function encryptContentAES(dataBase64, aesKeyBase64) {
+            const dataWordArray = CryptoJS.enc.Base64.parse(dataBase64);
+            const keyWordArray = CryptoJS.enc.Base64.parse(aesKeyBase64);
+            
+            const encrypted = CryptoJS.AES.encrypt(dataWordArray, keyWordArray, {
+                mode: CryptoJS.mode.ECB, 
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return encrypted.toString(); 
+        }
+
+        function decryptContentAES(encryptedDataBase64, aesKeyBase64) {
+            const keyWordArray = CryptoJS.enc.Base64.parse(aesKeyBase64);
+            
+            const decrypted = CryptoJS.AES.decrypt(encryptedDataBase64, keyWordArray, {
+                mode: CryptoJS.mode.ECB,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return decrypted.toString(CryptoJS.enc.Base64); 
+        }
+        
+        async function hashContent(arrayBuffer) {
+            const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); 
+        }
+
+        async function signContent(fileArrayBuffer, privateKey) {
+            if (!privateKey) {
+                console.error("Private key not available for client-side signing.");
+                return null;
+            }
+            const crypt = new JSEncrypt();
+            crypt.setPrivateKey(privateKey);
+            
+            const hash = await hashContent(fileArrayBuffer);
+            
+            return crypt.sign(hash, CryptoJS.SHA256, "sha256"); 
+        }
+
+        async function verifySignature(fileArrayBuffer, signature, publicKey) {
+            if (!publicKey) {
+                console.error("Public key not available for verification.");
+                return false;
+            }
+            const crypt = new JSEncrypt();
+            crypt.setPublicKey(publicKey);
+            
+            const hash = await hashContent(fileArrayBuffer);
+
+            return crypt.verify(hash, signature, CryptoJS.SHA256);
+        }
+
+        // --- File Icon and Size Formatting (Same as before) ---
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'pdf': return 'fas fa-file-pdf text-red-600';
+                case 'doc':
+                case 'docx': return 'fas fa-file-word text-blue-600';
+                case 'xls':
+                case 'xlsx': return 'fas fa-file-excel text-green-600';
+                case 'ppt':
+                case 'pptx': return 'fas fa-file-powerpoint text-orange-600';
+                case 'zip':
+                case 'rar': return 'fas fa-file-archive text-gray-600';
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                case 'gif': return 'fas fa-file-image text-purple-600';
+                case 'txt': return 'fas fa-file-alt text-gray-600';
+                case 'mp3':
+                case 'wav': return 'fas fa-file-audio text-teal-600';
+                case 'mp4':
+                case 'avi': return 'fas fa-file-video text-cyan-600';
+                case 'js':
+                case 'html':
+                case 'css':
+                case 'py':
+                case 'java': return 'fas fa-file-code text-indigo-600';
+                default: return 'fas fa-file text-gray-500';
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // --- DOM Elements (Same as before) ---
+        const teacherBtn = document.getElementById('teacherBtn');
+        const studentBtn = document.getElementById('studentBtn');
+        const teacherInterface = document.getElementById('teacherInterface');
+        const studentInterface = document.getElementById('studentInterface');
+
+        const dropZone = document.getElementById('dropZone');
+        const fileUploadInput = document.getElementById('fileUpload');
+        const fileInfoDiv = document.getElementById('fileInfo');
+        const fileNameSpan = document.getElementById('fileName');
+        const fileSizeSpan = document.getElementById('fileSize');
+        const fileIcon = document.getElementById('fileIcon');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        const encryptCheck = document.getElementById('encryptCheck');
+        const signCheck = document.getElementById('signCheck');
+        const classSelect = document.getElementById('classSelect');
+        const docType = document.getElementById('docType');
+        const fileDescription = document.getElementById('fileDescription');
+
+        const recentFilesContainerTeacher = document.getElementById('recentFilesContainerTeacher');
+        const studentFilesContainer = document.getElementById('studentFilesContainer');
+
+        const signatureModal = document.getElementById('signatureModal');
+        const modalSignatureStatus = document.getElementById('modalSignatureStatus');
+        const modalSignerName = document.getElementById('modalSignerName');
+        const modalSignDate = document.getElementById('modalSignDate');
+        const modalAlgorithm = document.getElementById('modalAlgorithm');
+        const modalSignatureValue = document.getElementById('modalSignatureValue');
+
+        const verifyFileUpload = document.getElementById('verifyFileUpload');
+        const signatureInput = document.getElementById('signatureInput');
+        const lecturerPublicKeyInput = document.getElementById('lecturerPublicKeyInput');
+        const verifySignatureBtn = document.getElementById('verifySignatureBtn');
+        const verificationResult = document.getElementById('verificationResult');
+
+        const teacherUploadLink = document.getElementById('teacherUploadLink');
+        const teacherHistoryLink = document.getElementById('teacherHistoryLink');
+        const teacherClassesLink = document.getElementById('teacherClassesLink');
+        const teacherKeyManagementLink = document.getElementById('teacherKeyManagementLink');
+        const teacherSettingsLink = document.getElementById('teacherSettingsLink');
+
+        const teacherUploadSection = document.getElementById('teacherUploadSection');
+        const teacherHistorySection = document.getElementById('teacherHistorySection');
+        const teacherClassesSection = document.getElementById('teacherClassesSection');
+        const teacherKeyManagementSection = document.getElementById('teacherKeyManagementSection');
+        const teacherSettingsSection = document.getElementById('teacherSettingsSection');
+
+        const studentDocLink = document.getElementById('studentDocLink');
+        const studentVerifyLink = document.getElementById('studentVerifyLink');
+        const studentSavedDocsLink = document.getElementById('studentSavedDocsLink');
+        const studentPersonalKeyLink = document.getElementById('studentPersonalKeyLink');
+
+        const studentDocSection = document.getElementById('studentDocSection');
+        const studentVerifySection = document.getElementById('studentVerifySection');
+        const studentSavedDocsSection = document.getElementById('studentSavedDocsSection');
+        const studentPersonalKeySection = document.getElementById('studentPersonalKeySection');
+
+        const lecturerPubKeyDisplay = document.getElementById('lecturerPubKeyDisplay');
+        const lecturerPrivKeyDisplay = document.getElementById('lecturerPrivKeyDisplay');
+        const generateNewKeysBtn = document.getElementById('generateNewKeysBtn');
+        const keyGenMessage = document.getElementById('keyGenMessage');
+
+        const studentPubKeyDisplay = document.getElementById('studentPubKeyDisplay');
+        const studentPrivKeyDisplay = document.getElementById('studentPrivKeyDisplay');
+        const generateStudentKeysBtn = document.getElementById('generateStudentKeysBtn');
+
+        const newClassIdInput = document.getElementById('newClassId');
+        const newClassNameInput = document.getElementById('newClassName');
+        const addClassBtn = document.getElementById('addClassBtn');
+        const currentClassesList = document.getElementById('currentClassesList');
+
+        // --- Tab Switching Logic (Giảng viên/Sinh viên) ---
+        function switchMainTab(interfaceId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(interfaceId).classList.add('active');
+
+            if (interfaceId === 'teacherInterface') {
+                teacherBtn.classList.add('bg-white', 'text-indigo-600');
+                teacherBtn.classList.remove('border', 'border-white', 'text-white', 'hover:bg-white', 'hover:text-indigo-600');
+                studentBtn.classList.remove('bg-white', 'text-indigo-600');
+                studentBtn.classList.add('border', 'border-white', 'text-white', 'hover:bg-white', 'hover:text-indigo-600');
+                switchTeacherSidebar('teacherUploadSection');
+                teacherUploadLink.classList.add('active');
+            } else { // studentInterface
+                studentBtn.classList.add('bg-white', 'text-indigo-600');
+                studentBtn.classList.remove('border', 'border-white', 'text-white', 'hover:bg-white', 'hover:text-indigo-600');
+                teacherBtn.classList.remove('bg-white', 'text-indigo-600');
+                teacherBtn.classList.add('border', 'border-white', 'text-white', 'hover:bg-white', 'hover:text-indigo-600');
+                switchStudentSidebar('studentDocSection');
+                studentDocLink.classList.add('active');
+            }
+        }
+
+        teacherBtn.addEventListener('click', () => switchMainTab('teacherInterface'));
+        studentBtn.addEventListener('click', () => switchMainTab('studentInterface'));
+
+        // --- Sidebar Navigation Functions ---
+        function switchTeacherSidebar(sectionId) {
+            document.querySelectorAll('.teacher-tab-content').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('#teacherInterface .sidebar-link').forEach(link => link.classList.remove('active'));
+            if (sectionId === 'teacherUploadSection') teacherUploadLink.classList.add('active');
+            else if (sectionId === 'teacherHistorySection') {
+                teacherHistoryLink.classList.add('active');
+                requestToServer('get_files'); // Refresh files from server when viewing history
+            }
+            else if (sectionId === 'teacherClassesSection') {
+                teacherClassesLink.classList.add('active');
+                requestToServer('get_classes'); // Refresh classes from server
+            }
+            else if (sectionId === 'teacherKeyManagementSection') {
+                teacherKeyManagementLink.classList.add('active');
+                requestToServer('get_lecturer_keys'); // Refresh keys from server
+            }
+            else if (sectionId === 'teacherSettingsSection') teacherSettingsLink.classList.add('active');
+        }
+
+        teacherUploadLink.addEventListener('click', (e) => { e.preventDefault(); switchTeacherSidebar('teacherUploadSection'); });
+        teacherHistoryLink.addEventListener('click', (e) => { e.preventDefault(); switchTeacherSidebar('teacherHistorySection'); });
+        teacherClassesLink.addEventListener('click', (e) => { e.preventDefault(); switchTeacherSidebar('teacherClassesSection'); });
+        teacherKeyManagementLink.addEventListener('click', (e) => { e.preventDefault(); switchTeacherSidebar('teacherKeyManagementSection'); });
+        teacherSettingsLink.addEventListener('click', (e) => { e.preventDefault(); switchTeacherSidebar('teacherSettingsSection'); });
+
+        function switchStudentSidebar(sectionId) {
+            document.querySelectorAll('.student-tab-content').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('#studentInterface .sidebar-link').forEach(link => link.classList.remove('active'));
+            if (sectionId === 'studentDocSection') {
+                studentDocLink.classList.add('active');
+                requestToServer('get_files'); // Refresh documents from server
+            }
+            else if (sectionId === 'studentVerifySection') studentVerifyLink.classList.add('active');
+            else if (sectionId === 'studentSavedDocsSection') studentSavedDocsLink.classList.add('active');
+            else if (sectionId === 'studentPersonalKeySection') {
+                studentPersonalKeyLink.classList.add('active');
+                updateStudentKeyDisplays(); 
+            }
+        }
+
+        studentDocLink.addEventListener('click', (e) => { e.preventDefault(); switchStudentSidebar('studentDocSection'); });
+        studentVerifyLink.addEventListener('click', (e) => { e.preventDefault(); switchStudentSidebar('studentVerifySection'); });
+        studentSavedDocsLink.addEventListener('click', (e) => { e.preventDefault(); switchStudentSidebar('studentSavedDocsSection'); });
+        studentPersonalKeyLink.addEventListener('click', (e) => { e.preventDefault(); switchStudentSidebar('studentPersonalKeySection'); });
+
+
+        // --- File Upload Logic (Teacher) ---
+        function dragOver(event) {
+            event.preventDefault();
+            dropZone.classList.add('drag-active');
+        }
+
+        function dragLeave(event) {
+            event.preventDefault();
+            dropZone.classList.remove('drag-active');
+        }
+
+        function dropHandler(event) {
+            event.preventDefault();
+            dropZone.classList.remove('drag-active');
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files);
+            }
+        }
+
+        function handleFileSelect(files) {
+            if (files.length > 0) {
+                currentFile = files[0];
+                fileIcon.className = getFileIcon(currentFile.name);
+                fileNameSpan.textContent = currentFile.name;
+                fileSizeSpan.textContent = formatBytes(currentFile.size);
+                fileInfoDiv.classList.remove('hidden');
+                uploadBtn.disabled = false;
+                uploadProgress.style.width = '0%';
+            } else {
+                clearFile();
+            }
+        }
+
+        function clearFile() {
+            currentFile = null;
+            fileInfoDiv.classList.add('hidden');
+            uploadBtn.disabled = true;
+            fileUploadInput.value = '';
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!currentFile) {
+                alert('Vui lòng chọn một tệp để tải lên.');
+                return;
+            }
+            // If signing is enabled but lecturer's private key isn't loaded on client (from server), prevent upload
+            if (signCheck.checked && !lecturerPrivateKeyOnClient) {
+                alert('Vui lòng tạo cặp khóa giảng viên trong phần "Quản lý khóa" hoặc đợi server tải khóa lên trước khi ký số.');
+                return;
+            }
+
+            const isEncrypted = encryptCheck.checked;
+            const isSigned = signCheck.checked;
+            const selectedClass = classSelect.value;
+            const selectedDocType = docType.value;
+            const description = fileDescription.value;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const fileArrayBuffer = e.target.result; 
+                const originalFileBase64 = arrayBufferToBase64(fileArrayBuffer);
+                
+                let processedContentBase64 = originalFileBase64; // This will be sent to server
+                let signature = null;
+                let aesKeyBase64 = null; 
+
+                uploadProgress.style.width = '25%';
+
+                if (isEncrypted) {
+                    console.log("Mã hóa tệp (AES-256) trên client...");
+                    aesKeyBase64 = generateAESKey(); 
+                    processedContentBase64 = encryptContentAES(originalFileBase64, aesKeyBase64);
+                    if (!processedContentBase64) {
+                        alert("Mã hóa thất bại. Vui lòng kiểm tra console.");
+                        return;
+                    }
+                }
+                uploadProgress.style.width = '50%';
+
+                if (isSigned) {
+                    console.log("Ký số tệp (RSA/SHA-256) trên client...");
+                    // Sign the original (unencrypted) content for integrity check
+                    signature = await signContent(fileArrayBuffer, lecturerPrivateKeyOnClient);
+                    if (!signature) {
+                        alert("Ký số thất bại. Vui lòng kiểm tra console.");
+                        return;
+                    }
+                }
+                uploadProgress.style.width = '75%';
+
+                const fileData = {
+                    fileName: currentFile.name,
+                    fileContent: processedContentBase64, // Processed (possibly encrypted) content
+                    originalFileContent: originalFileBase64, // Original content for server-side signing/verification
+                    fileType: currentFile.type,
+                    isEncrypted: isEncrypted,
+                    isSigned: isSigned,
+                    course: selectedClass,
+                    docType: selectedDocType,
+                    description: description,
+                    uploader: 'Giảng viên A', 
+                    signature: signature, // Client-generated signature (if server can't sign)
+                    aesKeyBase64: aesKeyBase64 // AES key (for demo, server stores this)
+                };
+
+                requestToServer('upload_file', fileData);
+                uploadProgress.style.width = '100%';
+                clearFile(); 
+            };
+            reader.readAsArrayBuffer(currentFile); 
+        });
+
+        // --- Display Recent Files (Teacher) ---
+        function displayRecentFilesTeacher(files) {
+            recentFilesContainerTeacher.innerHTML = '';
+            if (!files || files.length === 0) {
+                recentFilesContainerTeacher.innerHTML = '<p class="text-gray-500 col-span-full">Chưa có tài liệu nào được tải lên gần đây.</p>';
+                return;
+            }
+
+            files.forEach(file => {
+                const fileCard = document.createElement('div');
+                fileCard.className = 'file-card bg-white rounded-lg shadow-md p-4 transition cursor-pointer';
+                fileCard.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="bg-indigo-100 p-3 rounded-lg mr-4">
+                            <i class="${getFileIcon(file.name)} text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-800">${file.name}</h4>
+                            <p class="text-sm text-gray-500 mt-1">${file.course} • ${file.uploadDate}</p>
+                            <div class="flex items-center mt-2">
+                                ${file.isSigned ? `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Đã ký</span>` : `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">Chưa ký</span>`}
+                                ${file.isEncrypted ? `<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded ml-2">Đã mã hóa</span>` : `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded ml-2">Chưa mã hóa</span>`}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                recentFilesContainerTeacher.appendChild(fileCard);
+            });
+        }
+
+        // --- Teacher Key Management ---
+        generateNewKeysBtn.addEventListener('click', () => {
+            requestToServer('generate_lecturer_keys');
+        });
+
+        function updateLecturerKeyDisplays() {
+            lecturerPubKeyDisplay.value = lecturerPublicKeyOnClient || 'Chưa tạo khóa';
+            lecturerPrivKeyDisplay.value = lecturerPrivateKeyOnClient || 'Chưa tạo khóa';
+        }
+
+        // --- Teacher Class Management ---
+        addClassBtn.addEventListener('click', () => {
+            const id = newClassIdInput.value.trim();
+            const name = newClassNameInput.value.trim();
+            if (id && name) {
+                requestToServer('add_class', { id: id, name: name });
+                newClassIdInput.value = '';
+                newClassNameInput.value = '';
+            } else {
+                alert('Vui lòng nhập đầy đủ mã và tên lớp.');
+            }
+        });
+
+        function populateClassSelect(classes) {
+            classSelect.innerHTML = '';
+            classes.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = `${cls.id} - ${cls.name}`;
+                classSelect.appendChild(option);
+            });
+        }
+
+        function displayCurrentClasses(classes) {
+            currentClassesList.innerHTML = '';
+            if (!classes || classes.length === 0) {
+                currentClassesList.innerHTML = '<li>Chưa có lớp học nào.</li>';
+                return;
+            }
+            classes.forEach(cls => {
+                const li = document.createElement('li');
+                li.textContent = `${cls.id} - ${cls.name}`;
+                currentClassesList.appendChild(li);
+            });
+        }
+
+
+        // --- Student Key Management ---
+        generateStudentKeysBtn.addEventListener('click', () => {
+            studentKeys = generateRSAKeyPairClient();
+            localStorage.setItem('studentKeys', JSON.stringify(studentKeys));
+            updateStudentKeyDisplays();
+            alert('Đã tạo cặp khóa cá nhân mới cho sinh viên!');
+        });
+
+        function updateStudentKeyDisplays() {
+            studentPubKeyDisplay.value = studentKeys.publicKey || 'Chưa tạo khóa';
+            studentPrivKeyDisplay.value = studentKeys.privateKey || 'Chưa tạo khóa';
+        }
+
+
+        // --- Display Student Documents ---
+        function displayStudentDocuments(files) {
+            studentFilesContainer.innerHTML = '';
+            if (!files || files.length === 0) {
+                studentFilesContainer.innerHTML = '<p class="text-gray-500 col-span-full">Chưa có tài liệu nào từ giảng viên.</p>';
+                return;
+            }
+
+            files.forEach(file => {
+                const fileCard = document.createElement('div');
+                fileCard.className = 'file-card bg-white rounded-lg shadow-md p-4 transition cursor-pointer';
+                fileCard.innerHTML = `
+                    <div class="flex items-start mb-3">
+                        <div class="bg-indigo-100 p-3 rounded-lg mr-4">
+                            <i class="${getFileIcon(file.name)} text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-800">${file.name}</h4>
+                            <p class="text-sm text-gray-500 mt-1">${file.course} • ${file.uploadDate}</p>
+                            <p class="text-xs text-gray-400">Giảng viên: ${file.uploader}</p>
+                            <div class="flex items-center mt-2">
+                                ${file.isSigned ? `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-1">Đã ký</span>` : `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mr-1">Chưa ký</span>`}
+                                ${file.isEncrypted ? `<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Đã mã hóa</span>` : `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">Chưa mã hóa</span>`}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-2 mt-4 border-t pt-3">
+                        ${file.isSigned ? `<button class="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition" onclick="showSignatureDetails('${file.id}')">
+                            <i class="fas fa-signature mr-1"></i> Xem chữ ký
+                        </button>` : ''}
+                        <button class="px-3 py-1 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" onclick="downloadFile('${file.id}')">
+                            <i class="fas fa-download mr-1"></i> Tải xuống
+                        </button>
+                    </div>
+                `;
+                studentFilesContainer.appendChild(fileCard);
+            });
+        }
+
+        // --- Signature Modal Functions ---
+        function showSignatureDetails(fileId) {
+            // Find file from currently displayed list 
+            // In a real app, you might make a specific request to the server for full metadata
+            // For demo, we rely on the data already fetched by get_files.
+            requestToServer('get_files'); // Re-fetch to ensure data is fresh
+            
+            // Temporary way to handle response for modal,
+            // better to pass file object directly or use a promise.
+            const tempOnMessage = (event) => {
+                const response = JSON.parse(event.data);
+                if (response.action === 'get_files' && response.status === 'success') {
+                    const file = response.files.find(f => f.id === fileId);
+                    if (!file || !file.isSigned) {
+                        alert("Không tìm thấy thông tin chữ ký cho tệp này.");
+                        return;
+                    }
+
+                    modalSignatureStatus.textContent = "Chưa xác thực (cần tải xuống và kiểm tra)"; 
+                    modalSignerName.textContent = file.uploader;
+                    modalSignDate.textContent = file.uploadDate;
+                    modalAlgorithm.textContent = "RSA/SHA-256";
+                    modalSignatureValue.textContent = file.signature ? file.signature.substring(0, 50) + '...' + file.signature.substring(file.signature.length - 20) : 'Không có';
+
+                    signatureModal.classList.add('show');
+                    ws.removeEventListener('message', tempOnMessage); // Remove listener after handling
+                }
+            };
+            ws.addEventListener('message', tempOnMessage); // Add temporary listener
+        }
+
+        function hideSignatureModal() {
+            signatureModal.classList.remove('show');
+        }
+
+        // --- Download File Logic (Student) ---
+        async function downloadFile(fileId) {
+            requestToServer('download_file', { fileId: fileId });
+        }
+
+        async function handleDownloadedFile(response) {
+            const { fileName, fileType, fileContent, isEncrypted, isSigned, signature, lecturerPublicKey, aesKeyBase64 } = response;
+
+            let finalArrayBuffer = base64ToArrayBuffer(fileContent); // Content as received (might be encrypted)
+            let downloadFileName = fileName;
+
+            // Decryption if encrypted
+            if (isEncrypted) {
+                console.log(`Giải mã tệp "${fileName}" trên client...`);
+                if (!aesKeyBase64) {
+                    alert("Lỗi: Không có khóa AES để giải mã. Tệp có thể không được mã hóa đúng cách hoặc khóa bị thiếu.");
+                    return;
+                }
+                try {
+                    const decryptedBase64 = decryptContentAES(fileContent, aesKeyBase64);
+                    finalArrayBuffer = base64ToArrayBuffer(decryptedBase64);
+                    downloadFileName = `Decrypted_${fileName}`;
+                    alert(`Đã giải mã thành công tệp "${fileName}".`);
+                } catch (e) {
+                    console.error("Lỗi giải mã trên client:", e);
+                    alert("Giải mã tệp gặp lỗi trên client. Tệp có thể bị hỏng hoặc khóa không đúng.");
+                    return;
+                }
+            }
+
+            // Verification (always try to verify if signed)
+            if (isSigned && signature && lecturerPublicKey) {
+                console.log(`Xác thực chữ ký của tệp "${fileName}" trên client...`);
+                // Note: If originalContentBase64 was not transmitted, you can only verify against the decrypted content.
+                // For full integrity, the original content hash is needed.
+                // Here, `finalArrayBuffer` is the content that was either originally unencrypted or is now decrypted.
+                const isValid = await verifySignature(finalArrayBuffer, signature, lecturerPublicKey); 
+                if (isValid) {
+                    alert(`Tệp "${fileName}" đã được xác thực chữ ký thành công! (Nội dung không bị thay đổi)`);
+                } else {
+                    alert(`CẢNH BÁO: Chữ ký của tệp "${fileName}" KHÔNG HỢP LỆ hoặc đã bị giả mạo!`);
+                }
+            }
+
+            // Initiate file download
+            const blob = new Blob([finalArrayBuffer], { type: fileType }); 
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = downloadFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); 
+        }
+
+        // --- Student Manual Signature Verification ---
+        verifySignatureBtn.addEventListener('click', async () => {
+            const fileToVerifyInput = verifyFileUpload.files[0];
+            const signature = signatureInput.value;
+            const publicKey = lecturerPublicKeyInput.value;
+
+            if (!fileToVerifyInput || !signature || !publicKey) {
+                alert('Vui lòng chọn tệp, nhập chữ ký và khóa công khai để xác thực.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const fileArrayBuffer = e.target.result; 
+                const isValid = await verifySignature(fileArrayBuffer, signature, publicKey);
+
+                verificationResult.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+                if (isValid) {
+                    verificationResult.classList.add('bg-green-100', 'text-green-800');
+                    verificationResult.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Chữ ký hợp lệ! Tệp không bị thay đổi và đúng nguồn gốc.';
+                } else {
+                    verificationResult.classList.add('bg-red-100', 'text-red-800');
+                    verificationResult.innerHTML = '<i class="fas fa-times-circle mr-2"></i> Chữ ký KHÔNG HỢP LỆ! Tệp có thể đã bị thay đổi hoặc không đúng nguồn gốc.';
+                }
+            };
+            reader.readAsArrayBuffer(fileToVerifyInput);
+        });
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket(); // Establish WebSocket connection on load
+            updateStudentKeyDisplays(); // Load student keys from localStorage
+
+            switchMainTab('teacherInterface');
+        });
+    </script>
+</body>
+</html>
